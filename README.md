@@ -1,2 +1,14 @@
 # nexusflow
-NexusFlow is a Discord-inspired, frontend-only Agentic Marketing OS built by dev agents with Next.js, TypeScript, and Tailwind CSS. It provides a dense, panel-driven interface for orchestrating AI agents across marketing channels and workflow threads, with real-time behavior simulated entirely on the client.
+
+**Automated project built via Dev Agents.**
+
+This repository was initialized automatically.
+
+## Context Files
+The following documentation files contain the Golden Context for this project:
+- project_brief.md
+- technical_spec.md
+- implementation_plan.md
+- coding_guidelines.md
+
+Please refer to them for details.
