@@ -1,80 +1,95 @@
-import { useWorkspace } from '@/contexts/workspace-context';
-import { mockService } from '@/lib/mock-service';
+'use client';
+
 import { useEffect, useState } from 'react';
-import { Workspace } from '@/types';
-import { Building2 } from 'lucide-react';
+import { useWorkspaceContext } from '@/contexts/workspace-context';
+import { MockService } from '@/lib/mock-service';
+import type { Workspace } from '@/types';
+import { Skeleton } from '@/ui/skeleton';
 import { cn } from '@/lib/utils';
 
-export const WorkspaceList = () => {
-  const { state, dispatch } = useWorkspace();
+const SKELETON_COUNT = 5;
+
+export function WorkspaceList() {
+  const { state, dispatch } = useWorkspaceContext();
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    mockService.getWorkspaces()
-      .then(setWorkspaces)
-      .catch((err) => {
-        console.error('Failed to fetch workspaces:', err);
-        setError('Failed to load workspaces');
-      })
-      .finally(() => setLoading(false));
+    const fetchWorkspaces = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const data = await MockService.getWorkspaces();
+        setWorkspaces(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load workspaces');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchWorkspaces();
   }, []);
 
   const handleWorkspaceClick = (workspaceId: string) => {
     dispatch({ type: 'SET_ACTIVE_WORKSPACE', payload: workspaceId });
   };
 
-  if (loading) {
-    return (
-      <div className="flex flex-col gap-1 p-2">
-        {[...Array(3)].map((_, i) => (
-          <div
-            key={i}
-            className="h-10 w-full animate-pulse rounded bg-slate-800/50"
-            role="status"
-            aria-label="Loading workspace"
-          />
-        ))}
-      </div>
-    );
-  }
-
   if (error) {
     return (
-      <div className="p-4 text-sm text-red-400" role="alert">
+      <div className="flex items-center justify-center h-full text-sm text-rose-500">
         {error}
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-1 p-2">
-      {workspaces.map((workspace) => (
-        <button
-          key={workspace.id}
-          onClick={() => handleWorkspaceClick(workspace.id)}
-          className={cn(
-            "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-all duration-200",
-            "focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-900",
-            state.activeWorkspaceId === workspace.id
-              ? "bg-indigo-600/10 text-indigo-400"
-              : "text-slate-300 hover:bg-slate-800 hover:text-slate-100"
-          )}
-          aria-current={state.activeWorkspaceId === workspace.id ? 'page' : undefined}
-        >
-          <Building2
-            className={cn(
-              "h-5 w-5 flex-shrink-0 transition-colors",
-              state.activeWorkspaceId === workspace.id
-                ? "text-indigo-400"
-                : "text-slate-500 group-hover:text-slate-400"
-            )}
-            aria-hidden="true"
-          />
-          <span className="truncate font-medium">{workspace.name}</span>
-        </button>
-      ))}
+    <div className="flex flex-col h-full">
+      <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-800">
+        <h2 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+          Workspaces
+        </h2>
+      </div>
+      <div className="flex-1 overflow-y-auto">
+        {isLoading ? (
+          <div className="p-2 space-y-1">
+            {Array.from({ length: SKELETON_COUNT }).map((_, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-3 px-3 py-2 rounded-md"
+              >
+                <Skeleton className="h-5 w-5 rounded-sm" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <ul role="list" className="divide-y divide-slate-100 dark:divide-slate-800">
+            {workspaces.map((workspace) => (
+              <li key={workspace.id}>
+                <button
+                  onClick={() => handleWorkspaceClick(workspace.id)}
+                  className={cn(
+                    'w-full flex items-center gap-3 px-3 py-2 text-sm transition-colors',
+                    'hover:bg-slate-100 dark:hover:bg-slate-800',
+                    state.activeWorkspaceId === workspace.id
+                      ? 'bg-slate-100 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 font-medium'
+                      : 'text-slate-700 dark:text-slate-300'
+                  )}
+                >
+                  <div className="flex-shrink-0 w-5 h-5 rounded-sm bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center">
+                    <span className="text-xs text-indigo-600 dark:text-indigo-400 font-semibold">
+                      {workspace.name[0]}
+                    </span>
+                  </div>
+                  <span className="truncate">{workspace.name}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
-};
+}

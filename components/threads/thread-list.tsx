@@ -3,105 +3,131 @@
 import { useEffect, useState } from 'react';
 import { useWorkspaceContext } from '@/contexts/workspace-context';
 import { MockService } from '@/lib/mock-service';
-import { Thread } from '@/types';
-import { Activity, Pause, Square } from 'lucide-react';
+import type { Thread } from '@/types';
+import { Skeleton } from '@/ui/skeleton';
+import { cn } from '@/lib/utils';
+import { Play, Pause, Square } from 'lucide-react';
+
+const SKELETON_COUNT = 4;
 
 const statusIcons = {
-  active: <Activity className="w-4 h-4 text-emerald-500" />,
-  paused: <Pause className="w-4 h-4 text-amber-500" />,
-  stopped: <Square className="w-4 h-4 text-slate-400" />,
+  active: Play,
+  paused: Pause,
+  stopped: Square,
 };
 
-export const ThreadList = () => {
-  const { activeChannelId, activeThreadId, dispatch } = useWorkspaceContext();
+const statusColors = {
+  active: 'text-emerald-500',
+  paused: 'text-amber-500',
+  stopped: 'text-slate-400',
+};
+
+export function ThreadList() {
+  const { state } = useWorkspaceContext();
   const [threads, setThreads] = useState<Thread[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!activeChannelId) {
-      setThreads([]);
-      return;
-    }
-
     const fetchThreads = async () => {
-      setLoading(true);
+      if (!state.activeChannelId) {
+        setThreads([]);
+        return;
+      }
+
+      setIsLoading(true);
       setError(null);
       try {
-        const data = await MockService.getThreads(activeChannelId);
+        const data = await MockService.getThreads(state.activeChannelId);
         setThreads(data);
       } catch (err) {
-        setError('Failed to load threads');
-        setThreads([]);
+        setError(err instanceof Error ? err.message : 'Failed to load threads');
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
     fetchThreads();
-  }, [activeChannelId]);
+  }, [state.activeChannelId]);
 
-  const handleSelectThread = (threadId: string) => {
-    dispatch({ type: 'SET_ACTIVE_THREAD', payload: threadId });
+  const handleThreadClick = (threadId: string) => {
+    // Dispatch action to set active thread
   };
-
-  if (loading) {
-    return (
-      <div className="p-4 space-y-2">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="h-12 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" />
-        ))}
-      </div>
-    );
-  }
 
   if (error) {
     return (
-      <div className="p-4 text-sm text-rose-500">{error}</div>
-    );
-  }
-
-  if (!activeChannelId) {
-    return (
-      <div className="p-4 text-sm text-slate-500">
-        Select a channel to view threads
+      <div className="flex items-center justify-center h-full text-sm text-rose-500">
+        {error}
       </div>
     );
   }
 
-  if (threads.length === 0) {
+  if (!state.activeChannelId) {
     return (
-      <div className="p-4 text-sm text-slate-500">
-        No threads in this channel
+      <div className="flex items-center justify-center h-full text-sm text-slate-500 dark:text-slate-400">
+        Select a channel
       </div>
     );
   }
 
   return (
-    <div className="divide-y divide-slate-200 dark:divide-slate-800">
-      {threads.map((thread) => (
-        <button
-          key={thread.id}
-          onClick={() => handleSelectThread(thread.id)}
-          className={`w-full px-4 py-3 flex items-center gap-3 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ${
-            activeThreadId === thread.id
-              ? 'bg-indigo-50 dark:bg-indigo-950/30 border-l-2 border-indigo-500'
-              : 'border-l-2 border-transparent'
-          }`}
-          aria-selected={activeThreadId === thread.id}
-          role="option"
-        >
-          {statusIcons[thread.status]}
-          <div className="flex-1 text-left">
-            <div className="text-sm font-medium text-slate-900 dark:text-slate-100">
-              {thread.title}
-            </div>
-            <div className="text-xs text-slate-500 dark:text-slate-400">
-              {new Date(thread.startTime).toLocaleTimeString()}
-            </div>
+    <div className="flex flex-col h-full">
+      <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-800">
+        <h2 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+          Threads
+        </h2>
+      </div>
+      <div className="flex-1 overflow-y-auto">
+        {isLoading ? (
+          <div className="p-2 space-y-2">
+            {Array.from({ length: SKELETON_COUNT }).map((_, i) => (
+              <div
+                key={i}
+                className="flex items-start gap-3 px-3 py-2 rounded-md"
+              >
+                <Skeleton className="h-4 w-4 rounded-sm mt-0.5" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-48" />
+                  <Skeleton className="h-3 w-32" />
+                </div>
+              </div>
+            ))}
           </div>
-        </button>
-      ))}
+        ) : (
+          <ul role="list" className="divide-y divide-slate-100 dark:divide-slate-800">
+            {threads.map((thread) => {
+              const StatusIcon = statusIcons[thread.status];
+              return (
+                <li key={thread.id}>
+                  <button
+                    onClick={() => handleThreadClick(thread.id)}
+                    className={cn(
+                      'w-full flex items-start gap-3 px-3 py-2 text-sm transition-colors',
+                      'hover:bg-slate-100 dark:hover:bg-slate-800',
+                      state.activeThreadId === thread.id
+                        ? 'bg-slate-100 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 font-medium'
+                        : 'text-slate-700 dark:text-slate-300'
+                    )}
+                  >
+                    <StatusIcon
+                      className={cn(
+                        'h-4 w-4 flex-shrink-0 mt-0.5',
+                        statusColors[thread.status]
+                      )}
+                    />
+                    <div className="flex-1 text-left">
+                      <p className="font-medium truncate">{thread.title}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        {new Date(thread.startTime).toLocaleTimeString()}
+                      </p>
+                    </div>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
     </div>
   );
-};
+}
