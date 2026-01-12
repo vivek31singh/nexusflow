@@ -1,341 +1,204 @@
-import {
-  Workspace,
-  Channel,
-  Thread,
-  Activity,
-  Agent,
-  ThreadStatus,
-  ActivityType,
-} from '@/types';
+import { Workspace, Channel, Thread, Activity } from '@/types';
 
-// Mock data generators
-const generateWorkspaces = (): Workspace[] => [
-  { id: 'ws-1', name: 'Marketing Campaign A', avatar: null },
-  { id: 'ws-2', name: 'Product Launch Q1', avatar: null },
-  { id: 'ws-3', name: 'Brand Awareness', avatar: null },
-];
-
-const generateChannels = (workspaceId: string): Channel[] => [
-  {
-    id: `ch-${workspaceId}-1`,
-    workspaceId,
-    name: 'general',
-    type: 'text',
-    unreadCount: 3,
-  },
-  {
-    id: `ch-${workspaceId}-2`,
-    workspaceId,
-    name: 'social-media',
-    type: 'workflow',
-    unreadCount: 0,
-  },
-  {
-    id: `ch-${workspaceId}-3`,
-    workspaceId,
-    name: 'email-campaigns',
-    type: 'workflow',
-    unreadCount: 12,
-  },
-];
-
-const generateThreads = (channelId: string): Thread[] => [
-  {
-    id: `thread-${channelId}-1`,
-    channelId,
-    title: 'Generate Instagram captions',
-    status: 'active',
-    startTime: new Date(Date.now() - 3600000),
-    agentIds: ['agent-1'],
-  },
-  {
-    id: `thread-${channelId}-2`,
-    channelId,
-    title: 'Analyze competitor keywords',
-    status: 'paused',
-    startTime: new Date(Date.now() - 7200000),
-    agentIds: ['agent-2', 'agent-3'],
-  },
-  {
-    id: `thread-${channelId}-3`,
-    channelId,
-    title: 'Compile weekly report',
-    status: 'stopped',
-    startTime: new Date(Date.now() - 86400000),
-    agentIds: ['agent-1'],
-  },
-];
-
-const generateAgents = (): Agent[] => [
-  {
-    id: 'agent-1',
-    name: 'CopyWriter',
-    status: 'running',
-    type: 'generator',
-    lastActive: new Date(),
-  },
-  {
-    id: 'agent-2',
-    name: 'SEO Specialist',
-    status: 'idle',
-    type: 'analyzer',
-    lastActive: new Date(),
-  },
-  {
-    id: 'agent-3',
-    name: 'Data Miner',
-    status: 'error',
-    type: 'fetcher',
-    lastActive: new Date(),
-  },
-];
-
-const generateActivities = (threadId: string): Activity[] => [
-  {
-    id: `act-${threadId}-1`,
-    threadId,
-    type: 'log',
-    timestamp: new Date(Date.now() - 60000),
-    content: 'Starting content generation workflow...',
-    metadata: { step: 1, totalSteps: 5 },
-  },
-  {
-    id: `act-${threadId}-2`,
-    threadId,
-    type: 'success',
-    timestamp: new Date(Date.now() - 30000),
-    content: 'Successfully fetched trending topics',
-    metadata: { count: 24 },
-  },
-  {
-    id: `act-${threadId}-3`,
-    threadId,
-    type: 'log',
-    timestamp: new Date(Date.now() - 15000),
-    content: 'Analyzing audience engagement patterns...',
-    metadata: { progress: 45 },
-  },
-  {
-    id: `act-${threadId}-4`,
-    threadId,
-    type: 'metric',
-    timestamp: new Date(Date.now() - 5000),
-    content: 'Engagement score: 8.7/10',
-    metadata: { score: 8.7, previousScore: 7.2 },
-  },
-];
-
-// Activity generation templates for real-time simulation
-const ACTIVITY_TEMPLATES = [
-  { type: 'log' as ActivityType, content: 'Processing batch data...' },
-  { type: 'log' as ActivityType, content: 'Optimizing content structure...' },
-  { type: 'log' as ActivityType, content: 'Validating output formats...' },
-  { type: 'success' as ActivityType, content: 'Task completed successfully' },
-  { type: 'metric' as ActivityType, content: 'Performance metric updated' },
-  { type: 'error' as ActivityType, content: 'Warning: Rate limit approaching' },
-];
-
-// Utility functions for simulation
-const delay = (min: number, max: number): Promise<void> => {
-  const ms = Math.floor(Math.random() * (max - min + 1)) + min;
-  return new Promise((resolve) => setTimeout(resolve, ms));
-};
-
-const simulateError = (): void => {
-  if (Math.random() < 0.15) {
-    throw new Error('Simulation failure: Network request failed');
-  }
-};
-
-// Type for unsubscribe function
+// Types
 type UnsubscribeFunction = () => void;
 
-class MockService {
-  private subscriptions: Map<string, Set<(activity: Activity) => void>>;
-  private intervals: Map<string, NodeJS.Timeout>;
-  private agents: Agent[];
+// Constants
+const DEFAULT_LATENCY_MIN = 1000;
+const DEFAULT_LATENCY_MAX = 5000;
+const ERROR_RATE = 0.15;
 
-  constructor() {
-    this.subscriptions = new Map();
-    this.intervals = new Map();
-    this.agents = generateAgents();
+// Mock Data
+const MOCK_WORKSPACES: Workspace[] = [
+  { id: 'ws-1', name: 'Marketing Campaign', createdAt: new Date('2024-01-15') },
+  { id: 'ws-2', name: 'Product Launch', createdAt: new Date('2024-02-01') },
+  { id: 'ws-3', name: 'Customer Research', createdAt: new Date('2024-02-15') },
+];
+
+const MOCK_CHANNELS: Channel[] = [
+  { id: 'ch-1', workspaceId: 'ws-1', name: 'Social Media', type: 'workflow', unreadCount: 3 },
+  { id: 'ch-2', workspaceId: 'ws-1', name: 'Email Campaign', type: 'text', unreadCount: 0 },
+  { id: 'ch-3', workspaceId: 'ws-2', name: 'Launch Prep', type: 'workflow', unreadCount: 7 },
+  { id: 'ch-4', workspaceId: 'ws-3', name: 'User Interviews', type: 'text', unreadCount: 1 },
+];
+
+const MOCK_THREADS: Thread[] = [
+  {
+    id: 'th-1',
+    channelId: 'ch-1',
+    title: 'Q1 Social Media Blitz',
+    status: 'active',
+    startTime: new Date('2024-03-01T10:00:00'),
+    agentIds: ['ag-1', 'ag-2'],
+  },
+  {
+    id: 'th-2',
+    channelId: 'ch-1',
+    title: 'Instagram Stories Campaign',
+    status: 'paused',
+    startTime: new Date('2024-03-02T14:30:00'),
+    agentIds: ['ag-3'],
+  },
+  {
+    id: 'th-3',
+    channelId: 'ch-3',
+    title: 'Launch Day Execution',
+    status: 'stopped',
+    startTime: new Date('2024-03-05T09:00:00'),
+    agentIds: ['ag-1', 'ag-2', 'ag-3'],
+  },
+];
+
+const MOCK_ACTIVITIES: Record<string, Activity[]> = {
+  'th-1': [
+    {
+      id: 'ac-1',
+      threadId: 'th-1',
+      type: 'log',
+      timestamp: new Date('2024-03-01T10:00:01'),
+      content: 'Initializing campaign workflow...',
+    },
+    {
+      id: 'ac-2',
+      threadId: 'th-1',
+      type: 'success',
+      timestamp: new Date('2024-03-01T10:00:02'),
+      content: 'Connected to Twitter API',
+    },
+    {
+      id: 'ac-3',
+      threadId: 'th-1',
+      type: 'metric',
+      timestamp: new Date('2024-03-01T10:01:00'),
+      content: 'Reach: 1,234 impressions',
+      metadata: { value: 1234, unit: 'impressions' },
+    },
+  ],
+};
+
+// Mock Service Class
+export class MockService {
+  private activeSubscriptions: Map<string, Set<(activity: Activity) => void>> = new Map();
+
+  private getRandomLatency(): number {
+    return Math.floor(Math.random() * (DEFAULT_LATENCY_MAX - DEFAULT_LATENCY_MIN + 1)) + DEFAULT_LATENCY_MIN;
   }
 
-  /**
-   * Fetch all workspaces
-   * Latency: 1-2s, Error rate: 15%
-   */
+  private shouldSimulateError(): boolean {
+    return Math.random() < ERROR_RATE;
+  }
+
   async getWorkspaces(): Promise<Workspace[]> {
-    await delay(1000, 2000);
-    simulateError();
-    return generateWorkspaces();
+    await this.delay(this.getRandomLatency());
+    if (this.shouldSimulateError()) {
+      throw new Error('Failed to fetch workspaces');
+    }
+    return MOCK_WORKSPACES;
   }
 
-  /**
-   * Fetch channels for a specific workspace
-   * Latency: 1-3s, Error rate: 15%
-   */
   async getChannels(workspaceId: string): Promise<Channel[]> {
-    await delay(1000, 3000);
-    simulateError();
-    return generateChannels(workspaceId);
+    await this.delay(this.getRandomLatency());
+    if (this.shouldSimulateError()) {
+      throw new Error('Failed to fetch channels');
+    }
+    return MOCK_CHANNELS.filter((ch) => ch.workspaceId === workspaceId);
   }
 
-  /**
-   * Fetch threads for a specific channel
-   * Latency: 1-3s, Error rate: 15%
-   */
   async getThreads(channelId: string): Promise<Thread[]> {
-    await delay(1000, 3000);
-    simulateError();
-    return generateThreads(channelId);
+    await this.delay(this.getRandomLatency());
+    if (this.shouldSimulateError()) {
+      throw new Error('Failed to fetch threads');
+    }
+    return MOCK_THREADS.filter((th) => th.channelId === channelId);
   }
 
-  /**
-   * Fetch activities for a specific thread
-   * Latency: 1-2s, Error rate: 15%
-   */
   async getActivities(threadId: string): Promise<Activity[]> {
-    await delay(1000, 2000);
-    simulateError();
-    return generateActivities(threadId);
+    await this.delay(this.getRandomLatency());
+    if (this.shouldSimulateError()) {
+      throw new Error('Failed to fetch activities');
+    }
+    return MOCK_ACTIVITIES[threadId] || [];
   }
 
-  /**
-   * Update the status of a thread
-   * Latency: 1-2s, Error rate: 15%
-   */
-  async updateThreadStatus(
-    threadId: string,
-    status: ThreadStatus
-  ): Promise<Thread> {
-    await delay(1000, 2000);
-    simulateError();
-
-    // Simulate returning an updated thread
-    const updatedThread: Thread = {
-      id: threadId,
-      channelId: 'ch-dummy',
-      title: 'Updated Thread',
-      status,
-      startTime: new Date(),
-      agentIds: ['agent-1'],
-    };
-
-    return updatedThread;
+  async updateThreadStatus(threadId: string, status: 'active' | 'paused' | 'stopped'): Promise<Thread> {
+    await this.delay(this.getRandomLatency());
+    if (this.shouldSimulateError()) {
+      throw new Error('Failed to update thread status');
+    }
+    const thread = MOCK_THREADS.find((th) => th.id === threadId);
+    if (!thread) {
+      throw new Error('Thread not found');
+    }
+    thread.status = status;
+    return thread;
   }
 
-  /**
-   * Subscribe to real-time activity updates for a thread
-   * Returns an unsubscribe function
-   */
-  subscribeToActivity(
-    threadId: string,
-    callback: (activity: Activity) => void
-  ): UnsubscribeFunction {
-    // Initialize subscription set for this thread if not exists
-    if (!this.subscriptions.has(threadId)) {
-      this.subscriptions.set(threadId, new Set());
+  subscribeToActivity(threadId: string, callback: (activity: Activity) => void): UnsubscribeFunction {
+    if (!this.activeSubscriptions.has(threadId)) {
+      this.activeSubscriptions.set(threadId, new Set());
+      this.startSimulation(threadId);
     }
-
-    // Add callback to subscribers
-    const subscribers = this.subscriptions.get(threadId)!;
-    subscribers.add(callback);
-
-    // Start generating activities if this is the first subscriber
-    if (subscribers.size === 1) {
-      this.startActivitySimulation(threadId);
-    }
+    this.activeSubscriptions.get(threadId)!.add(callback);
 
     // Return unsubscribe function
     return () => {
-      const currentSubscribers = this.subscriptions.get(threadId);
-      if (currentSubscribers) {
-        currentSubscribers.delete(callback);
-
-        // Stop simulation if no more subscribers
-        if (currentSubscribers.size === 0) {
-          this.stopActivitySimulation(threadId);
-          this.subscriptions.delete(threadId);
+      const callbacks = this.activeSubscriptions.get(threadId);
+      if (callbacks) {
+        callbacks.delete(callback);
+        if (callbacks.size === 0) {
+          this.activeSubscriptions.delete(threadId);
         }
       }
     };
   }
 
-  /**
-   * Start generating simulated activities for a thread
-   * Activities are generated every 2-5 seconds
-   */
-  private startActivitySimulation(threadId: string): void {
-    const generateActivity = (): void => {
-      const template =
-        ACTIVITY_TEMPLATES[Math.floor(Math.random() * ACTIVITY_TEMPLATES.length)];
+  private startSimulation(threadId: string): void {
+    const generateActivity = () => {
+      const callbacks = this.activeSubscriptions.get(threadId);
+      if (!callbacks || callbacks.size === 0) return;
 
-      const activity: Activity = {
-        id: `act-${threadId}-${Date.now()}`,
+      const activityTypes: Array<'log' | 'error' | 'success' | 'metric'> = ['log', 'log', 'log', 'success', 'metric'];
+      const type = activityTypes[Math.floor(Math.random() * activityTypes.length)];
+      
+      const activities: string[] = [
+        'Processing workflow step...',
+        'Analyzing user data...',
+        'Generating content...',
+        'Optimizing campaign settings...',
+        'Syncing with external APIs...',
+      ];
+      
+      const metrics: string[] = [
+        'Engagement: +12%',
+        'Conversions: 45',
+        'Click-through rate: 3.2%',
+        'Bounce rate: 42%',
+      ];
+
+      const newActivity: Activity = {
+        id: `ac-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         threadId,
-        type: template.type,
+        type,
         timestamp: new Date(),
-        content: template.content,
-        metadata: {
-          generatedAt: Date.now(),
-          threadId,
-        },
+        content: type === 'metric' ? metrics[Math.floor(Math.random() * metrics.length)] : activities[Math.floor(Math.random() * activities.length)],
+        metadata: type === 'metric' ? { generated: true } : undefined,
       };
 
-      // Notify all subscribers
-      const subscribers = this.subscriptions.get(threadId);
-      if (subscribers) {
-        subscribers.forEach((callback) => {
-          try {
-            callback(activity);
-          } catch (error) {
-            console.error('Error in activity callback:', error);
-          }
-        });
-      }
+      callbacks.forEach((cb) => cb(newActivity));
     };
 
-    // Generate initial activity immediately
-    generateActivity();
-
-    // Set up interval for ongoing activity generation
+    // Generate activities periodically
     const interval = setInterval(() => {
-      generateActivity();
-    }, 2000 + Math.random() * 3000); // 2-5 seconds
-
-    this.intervals.set(threadId, interval);
+      if (this.activeSubscriptions.has(threadId)) {
+        generateActivity();
+      } else {
+        clearInterval(interval);
+      }
+    }, 2000 + Math.random() * 3000);
   }
 
-  /**
-   * Stop generating activities for a thread
-   */
-  private stopActivitySimulation(threadId: string): void {
-    const interval = this.intervals.get(threadId);
-    if (interval) {
-      clearInterval(interval);
-      this.intervals.delete(threadId);
-    }
-  }
-
-  /**
-   * Get all agents (for Agent Panel)
-   * Latency: 1-2s, Error rate: 15%
-   */
-  async getAgents(): Promise<Agent[]> {
-    await delay(1000, 2000);
-    simulateError();
-    return [...this.agents];
-  }
-
-  /**
-   * Clean up all subscriptions and intervals
-   * Useful for testing or app shutdown
-   */
-  cleanup(): void {
-    this.intervals.forEach((interval) => clearInterval(interval));
-    this.intervals.clear();
-    this.subscriptions.clear();
+  private delay(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
 
