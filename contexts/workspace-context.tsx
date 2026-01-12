@@ -1,42 +1,62 @@
-"use client";
+'use client';
 
-import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
-import { WorkspaceState, WorkspaceAction } from '@/types';
-import { storage } from '@/lib/storage-manager';
+import { createContext, useContext, useReducer, ReactNode, Dispatch, useEffect } from 'react';
+import { WorkspaceState, Theme } from '@/types';
+import { StorageManager } from '@/lib/storage-manager';
 
-const STORAGE_KEY = 'workspace_state';
+type WorkspaceAction =
+  | { type: 'SET_ACTIVE_WORKSPACE'; payload: string }
+  | { type: 'SET_ACTIVE_CHANNEL'; payload: string }
+  | { type: 'SET_ACTIVE_THREAD'; payload: string | null }
+  | { type: 'TOGGLE_AGENT_PANEL' }
+  | { type: 'SET_AGENT_PANEL_OPEN'; payload: boolean }
+  | { type: 'SET_THEME'; payload: Theme };
+
+interface WorkspaceContextValue {
+  state: WorkspaceState;
+  dispatch: Dispatch<WorkspaceAction>;
+}
+
+const WorkspaceContext = createContext<WorkspaceContextValue | undefined>(undefined);
 
 const initialState: WorkspaceState = {
-  activeWorkspaceId: 'ws-1',
-  activeChannelId: 'ch-1',
+  activeWorkspaceId: StorageManager.getActiveWorkspaceId() || '',
+  activeChannelId: StorageManager.getActiveChannelId() || '',
   activeThreadId: null,
-  theme: 'dark',
-  isAgentPanelOpen: true,
+  theme: StorageManager.getTheme(),
+  isAgentPanelOpen: StorageManager.isAgentPanelOpen(),
 };
 
 function workspaceReducer(state: WorkspaceState, action: WorkspaceAction): WorkspaceState {
   switch (action.type) {
     case 'SET_ACTIVE_WORKSPACE':
+      StorageManager.setActiveWorkspaceId(action.payload);
       return { ...state, activeWorkspaceId: action.payload };
+
     case 'SET_ACTIVE_CHANNEL':
+      StorageManager.setActiveChannelId(action.payload);
       return { ...state, activeChannelId: action.payload };
+
     case 'SET_ACTIVE_THREAD':
       return { ...state, activeThreadId: action.payload };
-    case 'TOGGLE_THEME':
-      return { ...state, theme: state.theme === 'dark' ? 'light' : 'dark' };
+
     case 'TOGGLE_AGENT_PANEL':
-      return { ...state, isAgentPanelOpen: !state.isAgentPanelOpen };
+      const newPanelState = !state.isAgentPanelOpen;
+      StorageManager.setAgentPanelOpen(newPanelState);
+      return { ...state, isAgentPanelOpen: newPanelState };
+
+    case 'SET_AGENT_PANEL_OPEN':
+      StorageManager.setAgentPanelOpen(action.payload);
+      return { ...state, isAgentPanelOpen: action.payload };
+
+    case 'SET_THEME':
+      StorageManager.setTheme(action.payload);
+      return { ...state, theme: action.payload };
+
     default:
       return state;
   }
 }
-
-interface WorkspaceContextType {
-  state: WorkspaceState;
-  dispatch: React.Dispatch<WorkspaceAction>;
-}
-
-const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefined);
 
 interface WorkspaceProviderProps {
   children: ReactNode;
@@ -45,30 +65,14 @@ interface WorkspaceProviderProps {
 export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
   const [state, dispatch] = useReducer(workspaceReducer, initialState);
 
-  // Load state from localStorage on mount
   useEffect(() => {
-    const savedState = storage.get<WorkspaceState>(STORAGE_KEY);
-    if (savedState) {
-      Object.entries(savedState).forEach(([key, value]) => {
-        if (key in initialState) {
-          // @ts-ignore - dynamic key assignment
-          dispatch({ type: `SET_${key.toUpperCase()}`, payload: value });
-        }
-      });
-    }
-  }, []);
-
-  // Save state to localStorage on change
-  useEffect(() => {
-    storage.set(STORAGE_KEY, state);
-    
-    // Apply theme to document
-    if (state.theme === 'light') {
-      document.body.classList.add('light');
+    const root = document.documentElement;
+    if (state.theme === 'dark') {
+      root.classList.add('dark');
     } else {
-      document.body.classList.remove('light');
+      root.classList.remove('dark');
     }
-  }, [state]);
+  }, [state.theme]);
 
   return (
     <WorkspaceContext.Provider value={{ state, dispatch }}>
