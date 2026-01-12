@@ -2,6 +2,7 @@
 
 import { WorkspaceList } from '@/components/workspace/workspace-list';
 import { ChannelList } from '@/components/channel/channel-list';
+import { ThreadList } from '@/components/threads/thread-list';
 import { Panel } from '@/components/ui/panel';
 import { WorkspaceProvider } from '@/contexts/workspace-context';
 
@@ -9,7 +10,7 @@ export const MainLayout = () => {
   return (
     <WorkspaceProvider>
       <div className="flex flex-col h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
-        <div className="flex-1 grid grid-cols-[260px_260px_1fr_320px] overflow-hidden">
+        <div className="flex-1 grid grid-cols-[240px_240px_1fr_280px] hidden md:grid">
           {/* Panel 1: Workspace Sidebar */}
           <Panel className="border-r border-slate-200 dark:border-slate-800">
             <WorkspaceList />
@@ -20,24 +21,43 @@ export const MainLayout = () => {
             <ChannelList />
           </Panel>
 
-          {/* Panel 3: Main Content Area */}
-          <Panel className="border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-            <div className="flex items-center justify-center h-full text-slate-400">
-              <span className="text-sm">Main Content - Thread List & Activity Stream</span>
+          {/* Panel 3: Main Content (Thread List) */}
+          <Panel className="border-r border-slate-200 dark:border-slate-800">
+            <div className="flex flex-col h-full">
+              <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-800">
+                <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                  Threads
+                </h2>
+              </div>
+              <ThreadList />
             </div>
           </Panel>
 
           {/* Panel 4: Agent Panel (Collapsible) */}
-          <Panel className="bg-slate-50 dark:bg-slate-950">
-            <div className="flex items-center justify-center h-full text-slate-400">
-              <span className="text-sm">Agent Panel</span>
+          <Panel className="border-l border-slate-200 dark:border-slate-800">
+            <div className="p-4">
+              <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                Agent Panel
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Agent monitoring and controls will be displayed here.
+              </p>
             </div>
           </Panel>
         </div>
 
-        {/* Mobile/Tablet Responsive Behavior - handled via CSS classes above */}
-        {/* Tablets (<1024px): Hidden panels accessible via drawers */}
-        {/* Mobile (<768px): All sidebars hidden, main content full width */}
+        {/* Responsive Layout: Mobile/Tablet */}
+        <div className="md:hidden flex-1 overflow-hidden">
+          <div className="h-full flex flex-col">
+            <Panel className="flex-1 overflow-y-auto">
+              <div className="p-4">
+                <p className="text-sm text-slate-500 dark:text-slate-400 text-center">
+                  Mobile view - Sidebars accessible via drawers
+                </p>
+              </div>
+            </Panel>
+          </div>
+        </div>
       </div>
     </WorkspaceProvider>
   );
