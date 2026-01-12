@@ -1,42 +1,32 @@
-import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
-import './globals.css';
-import { WorkspaceProvider } from '@/contexts/workspace-context';
-import { CommandPalette } from '@/components/overlays/command-palette';
-import { useKeyboard } from '@/hooks/use-keyboard';
-import { useWorkspaceContext } from '@/contexts/workspace-context';
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import "./globals.css";
+import { WorkspaceProvider } from "@/contexts/workspace-context";
+import { ToastProvider } from "@/contexts/toast-context";
+import { CommandPalette } from "@/components/overlays/command-palette";
+import { Toast } from "@/components/overlays/toast";
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'nexusflow - Agentic Marketing OS',
-  description: 'Production-grade agentic marketing operating system',
+  title: "nexusflow - Agentic Marketing OS",
+  description: "A calm & dense agentic marketing OS built with Next.js",
 };
 
-function LayoutContent({ children }: { children: React.ReactNode }) {
-  const { dispatch } = useWorkspaceContext();
-
-  // Global keyboard shortcut to open command palette (Ctrl+K or Cmd+K)
-  useKeyboard({
-    key: 'k',
-    ctrlKey: true,
-    onKeyDown: () => dispatch({ type: 'TOGGLE_COMMAND_PALETTE' }),
-  });
-
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <>
-      {children}
-      <CommandPalette />
-    </>
-  );
-}
-
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="en" className="dark">
+    <html lang="en">
       <body className={inter.className}>
         <WorkspaceProvider>
-          <LayoutContent>{children}</LayoutContent>
+          <ToastProvider>
+            {children}
+            <CommandPalette />
+            <Toast />
+          </ToastProvider>
         </WorkspaceProvider>
       </body>
     </html>
