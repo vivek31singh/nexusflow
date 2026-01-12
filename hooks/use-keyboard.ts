@@ -1,27 +1,32 @@
 import { useEffect } from 'react';
 
-/**
- * Hook for keyboard shortcuts
- */
-export function useKeyboard(
-  key: string,
-  callback: (event: KeyboardEvent) => void,
-  options: { ctrl?: boolean; meta?: boolean; shift?: boolean } = {}
-) {
+interface UseKeyboardOptions {
+  key: string;
+  ctrlKey?: boolean;
+  shiftKey?: boolean;
+  metaKey?: boolean;
+  altKey?: boolean;
+  onKeyDown: (event: KeyboardEvent) => void;
+}
+
+export function useKeyboard(options: UseKeyboardOptions) {
+  const { key, ctrlKey = false, shiftKey = false, metaKey = false, altKey = false, onKeyDown } = options;
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      const keyMatch = event.key.toLowerCase() === key.toLowerCase();
-      const ctrlMatch = !options.ctrl || event.ctrlKey;
-      const metaMatch = !options.meta || event.metaKey;
-      const shiftMatch = !options.shift || event.shiftKey;
-
-      if (keyMatch && ctrlMatch && metaMatch && shiftMatch) {
+      if (
+        event.key === key &&
+        event.ctrlKey === ctrlKey &&
+        event.shiftKey === shiftKey &&
+        event.metaKey === metaKey &&
+        event.altKey === altKey
+      ) {
         event.preventDefault();
-        callback(event);
+        onKeyDown(event);
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [key, callback, options]);
+  }, [key, ctrlKey, shiftKey, metaKey, altKey, onKeyDown]);
 }

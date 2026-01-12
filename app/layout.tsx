@@ -2,30 +2,41 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { WorkspaceProvider } from '@/contexts/workspace-context';
-import { MainLayout } from '@/components/layout/main-layout';
+import { CommandPalette } from '@/components/overlays/command-palette';
+import { useKeyboard } from '@/hooks/use-keyboard';
+import { useWorkspaceContext } from '@/contexts/workspace-context';
 
-const inter = Inter({ 
-  subsets: ['latin'],
-  display: 'swap',
-});
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'nexusflow - Agentic Marketing OS',
-  description: 'A calm and dense agentic marketing operating system',
+  description: 'Production-grade agentic marketing operating system',
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+function LayoutContent({ children }: { children: React.ReactNode }) {
+  const { dispatch } = useWorkspaceContext();
+
+  // Global keyboard shortcut to open command palette (Ctrl+K or Cmd+K)
+  useKeyboard({
+    key: 'k',
+    ctrlKey: true,
+    onKeyDown: () => dispatch({ type: 'TOGGLE_COMMAND_PALETTE' }),
+  });
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    <>
+      {children}
+      <CommandPalette />
+    </>
+  );
+}
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en" className="dark">
       <body className={inter.className}>
         <WorkspaceProvider>
-          <MainLayout>
-            {children}
-          </MainLayout>
+          <LayoutContent>{children}</LayoutContent>
         </WorkspaceProvider>
       </body>
     </html>
