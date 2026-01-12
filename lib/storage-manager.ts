@@ -1,79 +1,47 @@
 export class StorageManager {
-  private static readonly STORAGE_KEY = 'nexusflow';
-
-  private static getValue<T>(key: string, defaultValue: T): T {
-    if (typeof window === 'undefined') {
-      return defaultValue;
-    }
-
-    try {
-      const stored = localStorage.getItem(`${this.STORAGE_KEY}_${key}`);
-      if (stored === null) {
-        return defaultValue;
-      }
-      return JSON.parse(stored) as T;
-    } catch (error) {
-      console.error(`Error reading ${key} from localStorage:`, error);
-      return defaultValue;
-    }
-  }
-
-  private static setValue<T>(key: string, value: T): void {
-    if (typeof window === 'undefined') {
-      return;
-    }
+  /**
+   * Retrieves a value from localStorage by key
+   * @param key - The localStorage key
+   * @returns The parsed value or null if not found
+   */
+  static get<T>(key: string): T | null {
+    if (typeof window === 'undefined') return null;
 
     try {
-      localStorage.setItem(`${this.STORAGE_KEY}_${key}`, JSON.stringify(value));
+      const item = window.localStorage.getItem(key);
+      return item ? JSON.parse(item) : null;
     } catch (error) {
-      console.error(`Error writing ${key} to localStorage:`, error);
+      console.error(`Error reading from localStorage for key "${key}":`, error);
+      return null;
     }
   }
 
-  static getTheme(): 'dark' | 'light' {
-    return this.getValue<'dark' | 'light'>('theme', 'dark');
-  }
+  /**
+   * Stores a value in localStorage
+   * @param key - The localStorage key
+   * @param value - The value to store (will be JSON stringified)
+   */
+  static set<T>(key: string, value: T): void {
+    if (typeof window === 'undefined') return;
 
-  static setTheme(theme: 'dark' | 'light'): void {
-    this.setValue('theme', theme);
-  }
-
-  static getActiveWorkspaceId(): string | null {
-    return this.getValue<string | null>('activeWorkspaceId', null);
-  }
-
-  static setActiveWorkspaceId(workspaceId: string | null): void {
-    this.setValue('activeWorkspaceId', workspaceId);
-  }
-
-  static getActiveChannelId(): string | null {
-    return this.getValue<string | null>('activeChannelId', null);
-  }
-
-  static setActiveChannelId(channelId: string | null): void {
-    this.setValue('activeChannelId', channelId);
-  }
-
-  static isAgentPanelOpen(): boolean {
-    return this.getValue<boolean>('isAgentPanelOpen', true);
-  }
-
-  static setAgentPanelOpen(isOpen: boolean): void {
-    this.setValue('isAgentPanelOpen', isOpen);
-  }
-
-  static clearAll(): void {
-    if (typeof window === 'undefined') {
-      return;
+    try {
+      window.localStorage.setItem(key, JSON.stringify(value));
+    } catch (error) {
+      console.error(`Error writing to localStorage for key "${key}":`, error);
     }
+  }
 
-    const keysToRemove: string[] = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith(`${this.STORAGE_KEY}_`)) {
-        keysToRemove.push(key);
-      }
+  /**
+   * Removes a value from localStorage
+   * @param key - The localStorage key to remove
+   */
+  static remove(key: string): void {
+    if (typeof window === 'undefined') return;
+
+    try {
+      window.localStorage.removeItem(key);
+    } catch (error) {
+      console.error(`Error removing from localStorage for key "${key}":`, error);
     }
-    keysToRemove.forEach(key => localStorage.removeItem(key));
   }
 }
