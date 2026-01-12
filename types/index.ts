@@ -1,11 +1,33 @@
-// Domain Models for nexusflow
+// Domain Models and Type Interfaces for Nexusflow
 
+/**
+ * Represents the current status of an Agent.
+ */
 export type AgentStatus = 'idle' | 'running' | 'paused' | 'error';
-export type ChannelType = 'text' | 'workflow';
-export type ThreadStatus = 'active' | 'paused' | 'stopped';
-export type ActivityType = 'log' | 'error' | 'success' | 'metric';
-export type ThemeMode = 'dark' | 'light';
 
+/**
+ * Represents the type of a Channel.
+ */
+export type ChannelType = 'text' | 'workflow';
+
+/**
+ * Represents the status of a Thread.
+ */
+export type ThreadStatus = 'active' | 'paused' | 'stopped';
+
+/**
+ * Represents the type of an Activity entry.
+ */
+export type ActivityType = 'log' | 'error' | 'success' | 'metric';
+
+/**
+ * Represents the application theme.
+ */
+export type Theme = 'dark' | 'light';
+
+/**
+ * Agent interface representing an AI agent in the system.
+ */
 export interface Agent {
   id: string;
   name: string;
@@ -14,6 +36,9 @@ export interface Agent {
   lastActive: Date;
 }
 
+/**
+ * Channel interface representing a communication channel within a workspace.
+ */
 export interface Channel {
   id: string;
   workspaceId: string;
@@ -22,6 +47,9 @@ export interface Channel {
   unreadCount: number;
 }
 
+/**
+ * Thread interface representing a workflow or task thread.
+ */
 export interface Thread {
   id: string;
   channelId: string;
@@ -31,34 +59,35 @@ export interface Thread {
   agentIds: string[];
 }
 
+/**
+ * Activity interface representing a log entry or event in the activity stream.
+ */
 export interface Activity {
   id: string;
   threadId: string;
   type: ActivityType;
   timestamp: Date;
   content: string;
-  metadata?: Record<string, unknown>;
+  metadata?: Record<string, any>;
 }
 
-export interface Workspace {
-  id: string;
-  name: string;
-  icon?: string;
-}
-
+/**
+ * WorkspaceState interface representing the global application state.
+ */
 export interface WorkspaceState {
   activeWorkspaceId: string;
   activeChannelId: string;
   activeThreadId: string | null;
-  theme: ThemeMode;
+  theme: Theme;
   isAgentPanelOpen: boolean;
 }
 
-export type WorkspaceAction =
-  | { type: 'SET_ACTIVE_WORKSPACE'; payload: string }
-  | { type: 'SET_ACTIVE_CHANNEL'; payload: string }
-  | { type: 'SET_ACTIVE_THREAD'; payload: string | null }
-  | { type: 'TOGGLE_THEME' }
-  | { type: 'TOGGLE_AGENT_PANEL' };
-
-export type UnsubscribeFunction = () => void;
+/**
+ * Workspace interface (for future use).
+ */
+export interface Workspace {
+  id: string;
+  name: string;
+  description?: string;
+  createdAt: Date;
+}
