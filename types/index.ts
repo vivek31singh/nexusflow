@@ -1,13 +1,11 @@
-// Domain Models for nexusflow - Agentic Marketing OS
+// Domain Models for nexusflow
 
-// Type aliases for union types used across interfaces
 export type AgentStatus = 'idle' | 'running' | 'paused' | 'error';
 export type ChannelType = 'text' | 'workflow';
 export type ThreadStatus = 'active' | 'paused' | 'stopped';
 export type ActivityType = 'log' | 'error' | 'success' | 'metric';
-export type Theme = 'dark' | 'light';
+export type ThemeMode = 'dark' | 'light';
 
-// Agent represents an AI agent with its current state
 export interface Agent {
   id: string;
   name: string;
@@ -16,7 +14,6 @@ export interface Agent {
   lastActive: Date;
 }
 
-// Channel represents a communication channel within a workspace
 export interface Channel {
   id: string;
   workspaceId: string;
@@ -25,7 +22,6 @@ export interface Channel {
   unreadCount: number;
 }
 
-// Thread represents a workflow thread containing activities
 export interface Thread {
   id: string;
   channelId: string;
@@ -35,32 +31,34 @@ export interface Thread {
   agentIds: string[];
 }
 
-// Activity represents a single event or log entry in a thread
 export interface Activity {
   id: string;
   threadId: string;
   type: ActivityType;
   timestamp: Date;
   content: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
-// Workspace represents a high-level workspace container
 export interface Workspace {
   id: string;
   name: string;
-  description?: string;
-  createdAt: Date;
+  icon?: string;
 }
 
-// WorkspaceState represents the global application state
 export interface WorkspaceState {
   activeWorkspaceId: string;
   activeChannelId: string;
   activeThreadId: string | null;
-  theme: Theme;
+  theme: ThemeMode;
   isAgentPanelOpen: boolean;
 }
 
-// Type for unsubscribe function returned by subscriptions
+export type WorkspaceAction =
+  | { type: 'SET_ACTIVE_WORKSPACE'; payload: string }
+  | { type: 'SET_ACTIVE_CHANNEL'; payload: string }
+  | { type: 'SET_ACTIVE_THREAD'; payload: string | null }
+  | { type: 'TOGGLE_THEME' }
+  | { type: 'TOGGLE_AGENT_PANEL' };
+
 export type UnsubscribeFunction = () => void;

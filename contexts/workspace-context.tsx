@@ -1,108 +1,86 @@
-'use client'
+"use client";
 
-import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react'
-import { WorkspaceState, WorkspaceAction } from '@/types'
-import { storageManager } from '@/lib/storage-manager'
+import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
+import { WorkspaceState, WorkspaceAction } from '@/types';
+import { storage } from '@/lib/storage-manager';
 
-type WorkspaceContextType = {
-  state: WorkspaceState
-  dispatch: React.Dispatch<WorkspaceAction>
-}
-
-const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefined)
+const STORAGE_KEY = 'workspace_state';
 
 const initialState: WorkspaceState = {
-  activeWorkspaceId: '',
-  activeChannelId: '',
+  activeWorkspaceId: 'ws-1',
+  activeChannelId: 'ch-1',
   activeThreadId: null,
   theme: 'dark',
   isAgentPanelOpen: true,
-}
+};
 
 function workspaceReducer(state: WorkspaceState, action: WorkspaceAction): WorkspaceState {
   switch (action.type) {
     case 'SET_ACTIVE_WORKSPACE':
-      return { ...state, activeWorkspaceId: action.payload }
+      return { ...state, activeWorkspaceId: action.payload };
     case 'SET_ACTIVE_CHANNEL':
-      return { ...state, activeChannelId: action.payload, activeThreadId: null }
+      return { ...state, activeChannelId: action.payload };
     case 'SET_ACTIVE_THREAD':
-      return { ...state, activeThreadId: action.payload }
+      return { ...state, activeThreadId: action.payload };
     case 'TOGGLE_THEME':
-      return { ...state, theme: state.theme === 'dark' ? 'light' : 'dark' }
+      return { ...state, theme: state.theme === 'dark' ? 'light' : 'dark' };
     case 'TOGGLE_AGENT_PANEL':
-      return { ...state, isAgentPanelOpen: !state.isAgentPanelOpen }
+      return { ...state, isAgentPanelOpen: !state.isAgentPanelOpen };
     default:
-      return state
+      return state;
   }
 }
 
+interface WorkspaceContextType {
+  state: WorkspaceState;
+  dispatch: React.Dispatch<WorkspaceAction>;
+}
+
+const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefined);
+
 interface WorkspaceProviderProps {
-  children: ReactNode
+  children: ReactNode;
 }
 
 export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
-  const [state, dispatch] = useReducer(workspaceReducer, initialState)
+  const [state, dispatch] = useReducer(workspaceReducer, initialState);
 
   // Load state from localStorage on mount
   useEffect(() => {
-    const savedState = storageManager.get<Partial<WorkspaceState>>()
+    const savedState = storage.get<WorkspaceState>(STORAGE_KEY);
     if (savedState) {
       Object.entries(savedState).forEach(([key, value]) => {
-        if (value !== undefined) {
-          switch (key) {
-            case 'activeWorkspaceId':
-              dispatch({ type: 'SET_ACTIVE_WORKSPACE', payload: value })
-              break
-            case 'activeChannelId':
-              dispatch({ type: 'SET_ACTIVE_CHANNEL', payload: value })
-              break
-            case 'activeThreadId':
-              dispatch({ type: 'SET_ACTIVE_THREAD', payload: value })
-              break
-            case 'theme':
-              if (value === 'dark' || value === 'light') {
-                dispatch({ type: 'TOGGLE_THEME' }) // Will toggle if default differs
-                if (state.theme !== value) {
-                  dispatch({ type: 'TOGGLE_THEME' })
-                }
-              }
-              break
-            case 'isAgentPanelOpen':
-              if (state.isAgentPanelOpen !== value) {
-                dispatch({ type: 'TOGGLE_AGENT_PANEL' })
-              }
-              break
-          }
+        if (key in initialState) {
+          // @ts-ignore - dynamic key assignment
+          dispatch({ type: `SET_${key.toUpperCase()}`, payload: value });
         }
-      })
+      });
     }
-  }, [])
+  }, []);
 
   // Save state to localStorage on change
   useEffect(() => {
-    storageManager.set(state)
-  }, [state])
-
-  // Apply theme to document
-  useEffect(() => {
-    if (state.theme === 'dark') {
-      document.documentElement.classList.add('dark')
+    storage.set(STORAGE_KEY, state);
+    
+    // Apply theme to document
+    if (state.theme === 'light') {
+      document.body.classList.add('light');
     } else {
-      document.documentElement.classList.remove('dark')
+      document.body.classList.remove('light');
     }
-  }, [state.theme])
+  }, [state]);
 
   return (
     <WorkspaceContext.Provider value={{ state, dispatch }}>
       {children}
     </WorkspaceContext.Provider>
-  )
+  );
 }
 
 export function useWorkspace() {
-  const context = useContext(WorkspaceContext)
+  const context = useContext(WorkspaceContext);
   if (context === undefined) {
-    throw new Error('useWorkspace must be used within a WorkspaceProvider')
+    throw new Error('useWorkspace must be used within a WorkspaceProvider');
   }
-  return context
+  return context;
 }

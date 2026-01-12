@@ -1,72 +1,52 @@
-const STORAGE_KEY = 'nexusflow-state'
+/**
+ * StorageManager - Wrapper for localStorage with type safety
+ */
+class StorageManager {
+  private prefix = 'nexusflow_';
 
-export interface StorageData {
-  activeWorkspaceId?: string
-  activeChannelId?: string
-  activeThreadId?: string | null
-  theme?: 'dark' | 'light'
-  isAgentPanelOpen?: boolean
-}
-
-export class StorageManager {
-  private static instance: StorageManager
-
-  private constructor() {}
-
-  static getInstance(): StorageManager {
-    if (!StorageManager.instance) {
-      StorageManager.instance = new StorageManager()
-    }
-    return StorageManager.instance
-  }
-
-  get<T = StorageData>(key: string = STORAGE_KEY): T | null {
-    if (typeof window === 'undefined') return null
+  get<T>(key: string): T | null {
+    if (typeof window === 'undefined') return null;
     
     try {
-      const item = window.localStorage.getItem(key)
-      return item ? JSON.parse(item) : null
+      const item = window.localStorage.getItem(`${this.prefix}${key}`);
+      return item ? JSON.parse(item) : null;
     } catch (error) {
-      console.error('Error reading from localStorage:', error)
-      return null
+      console.error(`Error reading from localStorage: ${error}`);
+      return null;
     }
   }
 
-  set<T = StorageData>(key: string = STORAGE_KEY, value: T): boolean {
-    if (typeof window === 'undefined') return false
+  set<T>(key: string, value: T): void {
+    if (typeof window === 'undefined') return;
     
     try {
-      window.localStorage.setItem(key, JSON.stringify(value))
-      return true
+      window.localStorage.setItem(`${this.prefix}${key}`, JSON.stringify(value));
     } catch (error) {
-      console.error('Error writing to localStorage:', error)
-      return false
+      console.error(`Error writing to localStorage: ${error}`);
     }
   }
 
-  remove(key: string = STORAGE_KEY): boolean {
-    if (typeof window === 'undefined') return false
+  remove(key: string): void {
+    if (typeof window === 'undefined') return;
     
     try {
-      window.localStorage.removeItem(key)
-      return true
+      window.localStorage.removeItem(`${this.prefix}${key}`);
     } catch (error) {
-      console.error('Error removing from localStorage:', error)
-      return false
+      console.error(`Error removing from localStorage: ${error}`);
     }
   }
 
-  clear(): boolean {
-    if (typeof window === 'undefined') return false
+  clear(): void {
+    if (typeof window === 'undefined') return;
     
     try {
-      window.localStorage.clear()
-      return true
+      Object.keys(window.localStorage)
+        .filter((key) => key.startsWith(this.prefix))
+        .forEach((key) => window.localStorage.removeItem(key));
     } catch (error) {
-      console.error('Error clearing localStorage:', error)
-      return false
+      console.error(`Error clearing localStorage: ${error}`);
     }
   }
 }
 
-export const storageManager = StorageManager.getInstance()
+export const storage = new StorageManager();

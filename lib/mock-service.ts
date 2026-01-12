@@ -1,193 +1,141 @@
 import {
-  Workspace,
-  Channel,
-  Thread,
-  Activity,
-  Agent,
-  UnsubscribeFunction,
-} from '@/types'
-import { generateId } from './utils'
+  type Workspace,
+  type Channel,
+  type Thread,
+  type Activity,
+  type UnsubscribeFunction,
+  type ThreadStatus,
+} from '@/types';
 
-const DEFAULT_LATENCY = { min: 1000, max: 5000 }
-const ERROR_PROBABILITY = 0.15
+const DEFAULT_LATENCY = { min: 1000, max: 5000 };
+const ERROR_RATE = 0.15;
 
-// Mock Data
-const mockWorkspaces: Workspace[] = [
-  { id: 'ws-1', name: 'Marketing Campaign Q1', description: 'Q1 Marketing Initiatives' },
-  { id: 'ws-2', name: 'Product Launch', description: 'New Product Release' },
-  { id: 'ws-3', name: 'Social Media', description: 'Social Content Management' },
-]
+/**
+ * MockService - Simulates API endpoints with latency and random errors
+ */
+class MockService {
+  private subscribers: Map<string, Set<(activity: Activity) => void>> = new Map();
 
-const mockChannels: Record<string, Channel[]> = {
-  'ws-1': [
-    { id: 'ch-1', workspaceId: 'ws-1', name: 'Campaign Strategy', type: 'workflow', unreadCount: 0 },
-    { id: 'ch-2', workspaceId: 'ws-1', name: 'Content Review', type: 'text', unreadCount: 3 },
-  ],
-  'ws-2': [
-    { id: 'ch-3', workspaceId: 'ws-2', name: 'Launch Timeline', type: 'workflow', unreadCount: 0 },
-    { id: 'ch-4', workspaceId: 'ws-2', name: 'Beta Feedback', type: 'text', unreadCount: 7 },
-  ],
-  'ws-3': [
-    { id: 'ch-5', workspaceId: 'ws-3', name: 'Twitter Queue', type: 'workflow', unreadCount: 0 },
-  ],
-}
-
-const mockAgents: Agent[] = [
-  { id: 'ag-1', name: 'CopyWriter', status: 'idle', type: 'Content', lastActive: new Date() },
-  { id: 'ag-2', name: 'SEO Specialist', status: 'idle', type: 'Optimization', lastActive: new Date() },
-  { id: 'ag-3', name: 'Analyst', status: 'idle', type: 'Data', lastActive: new Date() },
-]
-
-const mockThreads: Record<string, Thread[]> = {}
-
-// In-memory activity storage for simulation
-const activityStore: Map<string, Activity[]> = new Map()
-const subscribers: Map<string, Set<(activity: Activity) => void>> = new Map()
-
-function randomDelay(min: number, max: number): Promise<void> {
-  const delay = Math.floor(Math.random() * (max - min + 1)) + min
-  return new Promise(resolve => setTimeout(resolve, delay))
-
-function shouldFail(): boolean {
-  return Math.random() < ERROR_PROBABILITY
-}
-
-export class MockService {
-  private static instance: MockService
-
-  private constructor() {
-    // Initialize some mock threads
-    this.initializeMockThreads()
+  private randomDelay(): Promise<void> {
+    const delay = Math.random() * (DEFAULT_LATENCY.max - DEFAULT_LATENCY.min) + DEFAULT_LATENCY.min;
+    return new Promise((resolve) => setTimeout(resolve, delay));
   }
 
-  static getInstance(): MockService {
-    if (!MockService.instance) {
-      MockService.instance = new MockService()
+  private randomError(): never | undefined {
+    if (Math.random() < ERROR_RATE) {
+      throw new Error('Simulation failure: Random network error');
     }
-    return MockService.instance
-  }
-
-  private initializeMockThreads() {
-    Object.values(mockChannels).flat().forEach(channel => {
-      mockThreads[channel.id] = [
-        {
-          id: generateId(),
-          channelId: channel.id,
-          title: `Thread in ${channel.name}`,
-          status: 'stopped',
-          startTime: new Date(),
-          agentIds: [mockAgents[0].id],
-        },
-      ]
-    })
+    return undefined;
   }
 
   async getWorkspaces(): Promise<Workspace[]> {
-    await randomDelay(DEFAULT_LATENCY.min, DEFAULT_LATENCY.max)
-    if (shouldFail()) throw new Error('Failed to fetch workspaces')
-    return [...mockWorkspaces]
+    await this.randomDelay();
+    this.randomError();
+    return [
+      { id: 'ws-1', name: 'Marketing Campaign', icon: 'M' },
+      { id: 'ws-2', name: 'Social Media', icon: 'S' },
+      { id: 'ws-3', name: 'Email Outreach', icon: 'E' },
+    ];
   }
 
   async getChannels(workspaceId: string): Promise<Channel[]> {
-    await randomDelay(DEFAULT_LATENCY.min, DEFAULT_LATENCY.max)
-    if (shouldFail()) throw new Error('Failed to fetch channels')
-    return mockChannels[workspaceId] || []
+    await this.randomDelay();
+    this.randomError();
+    return [
+      { id: 'ch-1', workspaceId, name: 'Campaign Flow', type: 'workflow', unreadCount: 3 },
+      { id: 'ch-2', workspaceId, name: 'General', type: 'text', unreadCount: 0 },
+      { id: 'ch-3', workspaceId, name: 'Analytics', type: 'text', unreadCount: 12 },
+    ];
   }
 
   async getThreads(channelId: string): Promise<Thread[]> {
-    await randomDelay(DEFAULT_LATENCY.min, DEFAULT_LATENCY.max)
-    if (shouldFail()) throw new Error('Failed to fetch threads')
-    return mockThreads[channelId] || []
+    await this.randomDelay();
+    this.randomError();
+    return [
+      {
+        id: 'th-1',
+        channelId,
+        title: 'Q4 Campaign Launch',
+        status: 'active',
+        startTime: new Date(Date.now() - 3600000),
+        agentIds: ['agent-1', 'agent-2'],
+      },
+      {
+        id: 'th-2',
+        channelId,
+        title: 'Email Sequence Test',
+        status: 'paused',
+        startTime: new Date(Date.now() - 7200000),
+        agentIds: ['agent-1'],
+      },
+    ];
   }
 
   async getActivities(threadId: string): Promise<Activity[]> {
-    await randomDelay(DEFAULT_LATENCY.min, DEFAULT_LATENCY.max)
-    if (shouldFail()) throw new Error('Failed to fetch activities')
-    return activityStore.get(threadId) || []
+    await this.randomDelay();
+    this.randomError();
+    return [
+      {
+        id: 'act-1',
+        threadId,
+        type: 'log',
+        timestamp: new Date(Date.now() - 60000),
+        content: 'Initializing workflow...',
+      },
+      {
+        id: 'act-2',
+        threadId,
+        type: 'success',
+        timestamp: new Date(Date.now() - 30000),
+        content: 'Campaign assets loaded successfully',
+      },
+      {
+        id: 'act-3',
+        threadId,
+        type: 'metric',
+        timestamp: new Date(),
+        content: 'Reach: 1,234 users',
+        metadata: { reach: 1234 },
+      },
+    ];
   }
 
-  async updateThreadStatus(threadId: string, status: 'active' | 'paused' | 'stopped'): Promise<Thread> {
-    await randomDelay(DEFAULT_LATENCY.min, DEFAULT_LATENCY.max)
-    if (shouldFail()) throw new Error('Failed to update thread status')
-
-    const thread = Object.values(mockThreads).flat().find(t => t.id === threadId)
-    if (thread) {
-      thread.status = status
-      
-      if (status === 'active') {
-        this.simulateActivity(threadId)
-      }
-    }
-    return thread!
-  }
-
-  async getAgents(): Promise<Agent[]> {
-    await randomDelay(DEFAULT_LATENCY.min, DEFAULT_LATENCY.max)
-    if (shouldFail()) throw new Error('Failed to fetch agents')
-    return [...mockAgents]
+  async updateThreadStatus(threadId: string, status: ThreadStatus): Promise<Thread> {
+    await this.randomDelay();
+    this.randomError();
+    return {
+      id: threadId,
+      channelId: 'ch-1',
+      title: 'Updated Thread',
+      status,
+      startTime: new Date(),
+      agentIds: ['agent-1'],
+    };
   }
 
   subscribeToActivity(threadId: string, callback: (activity: Activity) => void): UnsubscribeFunction {
-    if (!subscribers.has(threadId)) {
-      subscribers.set(threadId, new Set())
+    if (!this.subscribers.has(threadId)) {
+      this.subscribers.set(threadId, new Set());
     }
-    subscribers.get(threadId)!.add(callback)
+    this.subscribers.get(threadId)!.add(callback);
+
+    // Simulate real-time updates
+    const interval = setInterval(() => {
+      const activity: Activity = {
+        id: `act-${Date.now()}`,
+        threadId,
+        type: Math.random() > 0.8 ? 'error' : 'log',
+        timestamp: new Date(),
+        content: `Simulated activity at ${new Date().toLocaleTimeString()}`,
+      };
+      this.subscribers.get(threadId)?.forEach((cb) => cb(activity));
+    }, 2000);
 
     return () => {
-      subscribers.get(threadId)?.delete(callback)
-    }
-  }
-
-  private async simulateActivity(threadId: string) {
-    const activities = [
-      { type: 'log' as const, content: 'Processing request...' },
-      { type: 'log' as const, content: 'Analyzing data patterns...' },
-      { type: 'metric' as const, content: 'Efficiency: 94%', metadata: { efficiency: 94 } },
-      { type: 'success' as const, content: 'Task completed successfully' },
-      { type: 'error' as const, content: 'Connection timeout - retrying...' },
-    ]
-
-    let iterations = 0
-    const maxIterations = 10
-
-    const simulate = async () => {
-      if (iterations >= maxIterations) return
-
-      const thread = Object.values(mockThreads).flat().find(t => t.id === threadId)
-      if (!thread || thread.status !== 'active') return
-
-      await randomDelay(2000, 4000)
-
-      const activityTemplate = activities[Math.floor(Math.random() * activities.length)]
-      const activity: Activity = {
-        id: generateId(),
-        threadId,
-        ...activityTemplate,
-        timestamp: new Date(),
-      }
-
-      if (!activityStore.has(threadId)) {
-        activityStore.set(threadId, [])
-      }
-      activityStore.get(threadId)!.push(activity)
-
-      // Notify subscribers
-      subscribers.get(threadId)?.forEach(callback => callback(activity))
-
-      // Update agent status
-      const agentId = thread.agentIds[0]
-      const agent = mockAgents.find(a => a.id === agentId)
-      if (agent) {
-        agent.status = activity.type === 'error' ? 'error' : 'running'
-        agent.lastActive = new Date()
-      }
-
-      iterations++
-      simulate()
-    }
-
-    simulate()
+      clearInterval(interval);
+      this.subscribers.get(threadId)?.delete(callback);
+    };
   }
 }
 
-export const mockService = MockService.getInstance()
+export const mockService = new MockService();

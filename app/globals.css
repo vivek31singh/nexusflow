@@ -3,21 +3,41 @@
 @tailwind utilities;
 
 :root {
-  --font-inter: 'Inter', sans-serif;
+  --font-inter: 'Inter', system-ui, sans-serif;
   --font-jetbrains-mono: 'JetBrains Mono', monospace;
 }
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-slate-800;
   }
+  
   body {
-    @apply bg-slate-50 text-slate-900 font-sans antialiased dark:bg-slate-950 dark:text-slate-50;
+    @apply bg-slate-950 text-slate-100 antialiased;
+  }
+  
+  body.light {
+    @apply bg-slate-50 text-slate-900;
   }
 }
 
 @layer utilities {
-  .focus-ring {
-    @apply focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-slate-950;
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: theme('colors.slate-700') transparent;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: theme('colors.slate-700');
+    border-radius: 3px;
   }
 }

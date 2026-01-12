@@ -1,119 +1,81 @@
-import { useState, useEffect, useCallback } from 'react'
-import { mockService } from '@/lib/mock-service'
-import { Workspace, Channel, Thread, Activity, Agent } from '@/types'
+import { useState, useEffect } from 'react';
+import { mockService } from '@/lib/mock-service';
+import { type Workspace, type Channel, type Thread, type Activity } from '@/types';
 
+/**
+ * Hook for interacting with MockService
+ */
 export function useMockService() {
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+  const [channels, setChannels] = useState<Channel[]>([]);
+  const [threads, setThreads] = useState<Thread[]>([]);
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
-  const fetchWorkspaces = useCallback(async (): Promise<Workspace[]> => {
-    setLoading(true)
-    setError(null)
+  const fetchWorkspaces = async () => {
+    setLoading(true);
+    setError(null);
     try {
-      const result = await mockService.getWorkspaces()
-      return result
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown error'
-      setError(message)
-      throw err
+      const data = await mockService.getWorkspaces();
+      setWorkspaces(data);
+    } catch (e) {
+      setError(e as Error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [])
+  };
 
-  const fetchChannels = useCallback(async (workspaceId: string): Promise<Channel[]> => {
-    setLoading(true)
-    setError(null)
+  const fetchChannels = async (workspaceId: string) => {
+    setLoading(true);
+    setError(null);
     try {
-      const result = await mockService.getChannels(workspaceId)
-      return result
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown error'
-      setError(message)
-      throw err
+      const data = await mockService.getChannels(workspaceId);
+      setChannels(data);
+    } catch (e) {
+      setError(e as Error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [])
+  };
 
-  const fetchThreads = useCallback(async (channelId: string): Promise<Thread[]> => {
-    setLoading(true)
-    setError(null)
+  const fetchThreads = async (channelId: string) => {
+    setLoading(true);
+    setError(null);
     try {
-      const result = await mockService.getThreads(channelId)
-      return result
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown error'
-      setError(message)
-      throw err
+      const data = await mockService.getThreads(channelId);
+      setThreads(data);
+    } catch (e) {
+      setError(e as Error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [])
+  };
 
-  const fetchActivities = useCallback(async (threadId: string): Promise<Activity[]> => {
-    setLoading(true)
-    setError(null)
+  const fetchActivities = async (threadId: string) => {
+    setLoading(true);
+    setError(null);
     try {
-      const result = await mockService.getActivities(threadId)
-      return result
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown error'
-      setError(message)
-      throw err
+      const data = await mockService.getActivities(threadId);
+      setActivities(data);
+    } catch (e) {
+      setError(e as Error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [])
-
-  const updateThreadStatus = useCallback(async (
-    threadId: string,
-    status: 'active' | 'paused' | 'stopped'
-  ): Promise<Thread> => {
-    setLoading(true)
-    setError(null)
-    try {
-      const result = await mockService.updateThreadStatus(threadId, status)
-      return result
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown error'
-      setError(message)
-      throw err
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  const fetchAgents = useCallback(async (): Promise<Agent[]> => {
-    setLoading(true)
-    setError(null)
-    try {
-      const result = await mockService.getAgents()
-      return result
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown error'
-      setError(message)
-      throw err
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  const subscribeToActivity = useCallback(
-    (threadId: string, callback: (activity: Activity) => void) => {
-    return mockService.subscribeToActivity(threadId, callback)
-  },
-  [])
+  };
 
   return {
+    workspaces,
+    channels,
+    threads,
+    activities,
     loading,
     error,
     fetchWorkspaces,
     fetchChannels,
     fetchThreads,
     fetchActivities,
-    updateThreadStatus,
-    fetchAgents,
-    subscribeToActivity,
-  }
+    mockService,
+  };
 }
