@@ -1,22 +1,17 @@
-import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
-import "./globals.css";
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+import './globals.css';
+import { WorkspaceProvider } from '@/contexts/workspace-context';
+import { MainLayout } from '@/components/layout/main-layout';
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
-  variable: "--font-jetbrains-mono",
-  display: "swap",
+const inter = Inter({ 
+  subsets: ['latin'],
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
-  title: "nexusflow - Agentic Marketing OS",
-  description: "Production-grade agentic marketing OS with real-time AI orchestration",
+  title: 'nexusflow - Agentic Marketing OS',
+  description: 'A calm and dense agentic marketing operating system',
 };
 
 export default function RootLayout({
@@ -25,8 +20,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`}>
-      <body>{children}</body>
+    <html lang="en" suppressHydrationWarning>
+      <body className={inter.className}>
+        <WorkspaceProvider>
+          <MainLayout>
+            {children}
+          </MainLayout>
+        </WorkspaceProvider>
+      </body>
     </html>
   );
 }
