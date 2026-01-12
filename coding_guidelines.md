@@ -31,6 +31,7 @@
     /toast.tsx
 /contexts
   /workspace-context.tsx
+  /toast-context.tsx
 /hooks
   /use-keyboard.ts
   /use-theme.ts
@@ -53,21 +54,24 @@
 
 ## Coding Standards
 1.  **TypeScript:** Strict mode enabled. Explicit return types on public functions. No implicit `any`.
-2.  **Styling:** Use `cn()` utility (clsx + twMerge) for conditional classes. Hardcoded styles are forbidden; use Tailwind classes.
-3.  **Components:** Functional components with Hooks. No class components.
-4.  **Props:** Destructured props explicitly. Interfaces defined within the component file if private, or in `/types` if shared.
-5.  **Accessibility:** All icons must have `aria-label` or be hidden from screen readers if decorative. Buttons must have focus states.
-6.  **Imports:** Absolute imports using `@/` alias (e.g., `@/components/ui/button`).
+2.  **Directives:** Always include `'use client';` at the very top of files utilizing React Hooks (useState, useEffect, etc.), Context API, or browser event handlers (onClick, onChange) to prevent Next.js build errors in the App Router.
+3.  **Styling:** Use `cn()` utility (clsx + twMerge) for conditional classes. Hardcoded styles are forbidden; use Tailwind classes.
+4.  **Components:** Functional components with Hooks. No class components.
+5.  **Props:** Destructured props explicitly. Interfaces defined within the component file if private, or in `/types` if shared.
+6.  **Accessibility:** All icons must have `aria-label` or be hidden from screen readers if decorative. Buttons must have focus states.
+7.  **Imports:** Absolute imports using `@/` alias (e.g., `@/components/ui/button`).
+8.  **Memory Management:** When using `setTimeout` (e.g., in Toasts), ensure timeouts are cleared (via Refs or cleanup functions) when components unmount or state changes to prevent memory leaks.
 
 ## Testing Strategy
 1.  **Unit Testing (Jest/RTL):** Test logic in Hooks (`useTheme`), Utility functions, and the `MockService` probability logic.
 2.  **Component Testing:** Verify rendering of key components (`Sidebar`, `ThreadList`) with different states (loading, error, empty).
-3.  **Integration Testing:** Test the `WorkspaceProvider` context updates when actions are dispatched.
+3.  **Integration Testing:** Test the `WorkspaceProvider` and `ToastProvider` context updates when actions are dispatched.
 4.  **E2E Testing (Playwright):**
     *   Simulate user clicking through Workspaces/Channels.
     *   Test Thread Start/Stop flow.
     *   Verify Command Palette opens on `Ctrl+K`.
     *   Test Theme Toggle and persistence.
+    *   Verify Toast notifications appear and dismiss correctly.
 
 ## Error Handling
 1.  **MockService Layer:** Wraps all promises in try/catch blocks. Randomly throws errors to simulate network issues.

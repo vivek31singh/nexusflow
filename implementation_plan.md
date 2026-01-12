@@ -52,9 +52,9 @@ Build the Thread list and Main Activity Area. Implement the Container/Presenter 
 Develop the right-hand panel displaying agent status, health metrics, and configuration options. Ensure collapsible functionality.
 *   **Status:** `AgentPanel`, `AgentStats`, and `AgentControls` components implemented and integrated into Main Layout. Panel hooks into context state for visibility toggling.
 
-**Phase 8: Interaction Layer [IN PROGRESS]**
+**Phase 8: Interaction Layer [COMPLETED]**
 Implement the Command Palette (Ctrl+K), Toast Notification system, and Theme Toggle. Ensure focus management and ARIA compliance.
-*   **Status:** Command Palette fully implemented with `use-keyboard` hook, context integration, and mock commands. Toast system pending.
+*   **Status:** Command Palette fully implemented with `use-keyboard` hook, context integration, and mock commands. Toast Notification system fully implemented with `ToastProvider`, `useToast` hook, auto-dismissal, queue management (max 3 visible), and timeout cleanup to prevent memory leaks.
 
 **Phase 9: Simulation & Lifecycle Integration [IN PROGRESS]**
 Connect the UI to the MockService. Implement Start/Pause/Resume/Stop logic for threads. Visualize loading states (skeletons) and error boundaries.

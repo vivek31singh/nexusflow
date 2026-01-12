@@ -1,7 +1,7 @@
 # Technical Specification
 
 ## Architecture Patterns
-1.  **Provider Pattern:** Centralized state management using React Context API (`WorkspaceProvider`) combined with `useReducer` for complex state transitions (Threads, Agents).
+1.  **Provider Pattern:** Centralized state management using React Context API (`WorkspaceProvider`, `ToastProvider`) combined with `useReducer` for complex state transitions (Threads, Agents, Toasts).
 2.  **Service Layer Pattern:** A `MockService` class isolates data fetching logic, simulating API endpoints with promises and random timeouts.
 3.  **Container/Presenter Pattern:** Separation of "smart" components (Container) that fetch data and handle state from "dumb" components (Presenter) that purely render UI.
 4.  **Composition Pattern:** Complex UIs (like the Activity Stream) are built by composing smaller, generic layout components (e.g., `Panel`, `Section`, `ListRow`).
@@ -9,8 +9,9 @@
 ## Component Hierarchy
 App
 └── RootLayout (Font & Theme Providers)
-    └── CommandPalette (Global Overlay)
-    └── ToastProvider (Global Overlay)
+    ├── CommandPalette (Global Overlay)
+    ├── ToastProvider (Global Overlay)
+    │   └── ToastContainer
     └── MainLayout (Grid Container)
         ├── WorkspaceSidebar (Panel 1)
         │   └── WorkspaceList
@@ -30,6 +31,7 @@ App
 type ThreadStatus = 'active' | 'paused' | 'stopped';
 type ActivityType = 'log' | 'error' | 'success' | 'metric';
 type Theme = 'dark' | 'light';
+type ToastSeverity = 'info' | 'success' | 'warning' | 'error';
 ```
 
 **Interfaces:**
@@ -74,6 +76,15 @@ interface Activity {
   timestamp: Date;
   content: string;
   metadata?: Record<string, any>;
+}
+```
+**Toast:**
+```typescript
+interface Toast {
+  id: string;
+  message: string;
+  severity: ToastSeverity;
+  duration?: number;
 }
 ```
 **WorkspaceState:**
