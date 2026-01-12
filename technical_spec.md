@@ -25,9 +25,18 @@ App
             └── AgentControls
 
 ## Data Models
+**Types:**
+```typescript
+type ThreadStatus = 'active' | 'paused' | 'stopped';
+type ActivityType = 'log' | 'error' | 'success' | 'metric';
+type Theme = 'dark' | 'light';
+```
+
+**Interfaces:**
+
 **Agent:**
 ```typescript
-{
+interface Agent {
   id: string;
   name: string;
   status: 'idle' | 'running' | 'paused' | 'error';
@@ -37,7 +46,7 @@ App
 ```
 **Channel:**
 ```typescript
-{
+interface Channel {
   id: string;
   workspaceId: string;
   name: string;
@@ -47,21 +56,21 @@ App
 ```
 **Thread:**
 ```typescript
-{
+interface Thread {
   id: string;
   channelId: string;
   title: string;
-  status: 'active' | 'paused' | 'stopped';
+  status: ThreadStatus;
   startTime: Date;
   agentIds: string[];
 }
 ```
 **Activity:**
 ```typescript
-{
+interface Activity {
   id: string;
   threadId: string;
-  type: 'log' | 'error' | 'success' | 'metric';
+  type: ActivityType;
   timestamp: Date;
   content: string;
   metadata?: Record<string, any>;
@@ -69,11 +78,11 @@ App
 ```
 **WorkspaceState:**
 ```typescript
-{
+interface WorkspaceState {
   activeWorkspaceId: string;
   activeChannelId: string;
   activeThreadId: string | null;
-  theme: 'dark' | 'light';
+  theme: Theme;
   isAgentPanelOpen: boolean;
 }
 ```
