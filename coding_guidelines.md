@@ -15,6 +15,7 @@
     /sidebar.tsx
   /workspace         # Domain specific
     /workspace-list.tsx
+  /channel
     /channel-list.tsx
   /threads
     /thread-list.tsx
@@ -23,7 +24,8 @@
     /activity-stream.tsx
   /agents
     /agent-panel.tsx
-    /agent-card.tsx
+    /agent-stats.tsx
+    /agent-controls.tsx
   /overlays
     /command-palette.tsx
     /toast.tsx

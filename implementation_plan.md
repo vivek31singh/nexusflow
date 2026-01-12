@@ -48,14 +48,17 @@ Build the Workspace Sidebar and Channel Sidebar. Implement row-based lists, hove
 Build the Thread list and Main Activity Area. Implement the Container/Presenter pattern for the Activity Stream with auto-scroll logic and filtering.
 *   **Status:** `ThreadList` component implemented to fetch and display threads based on active channel context. `ActivityStream` component implemented with real-time MockService subscription, auto-scrolling behavior, and distinct typography for logs/errors/metrics.
 
-**Phase 7: Agent Panel & Metrics [IN PROGRESS]**
+**Phase 7: Agent Panel & Metrics [COMPLETED]**
 Develop the right-hand panel displaying agent status, health metrics, and configuration options. Ensure collapsible functionality.
+*   **Status:** `AgentPanel`, `AgentStats`, and `AgentControls` components implemented and integrated into Main Layout. Panel hooks into context state for visibility toggling.
 
-**Phase 8: Interaction Layer**
+**Phase 8: Interaction Layer [IN PROGRESS]**
 Implement the Command Palette (Ctrl+K), Toast Notification system, and Theme Toggle. Ensure focus management and ARIA compliance.
+*   **Status:** Command Palette fully implemented with `use-keyboard` hook, context integration, and mock commands. Toast system pending.
 
-**Phase 9: Simulation & Lifecycle Integration**
+**Phase 9: Simulation & Lifecycle Integration [IN PROGRESS]**
 Connect the UI to the MockService. Implement Start/Pause/Resume/Stop logic for threads. Visualize loading states (skeletons) and error boundaries.
+*   **Status:** UI components connected to MockService. Real-time subscriptions active. Agent controls created. Lifecycle logic partially active.
 
-**Phase 10: Polish & Accessibility**
+**Phase 10: Polish & Accessibility [PENDING]**
 Refine typography, transitions (<300ms), and keyboard navigation. Perform visual regression and accessibility auditing (WCAG AA).
