@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { X, Info, CheckCircle, AlertTriangle, XCircle } from 'lucide-react';
 import { useToast, ToastSeverity } from '@/contexts/toast-context';
 import { cn } from '@/lib/utils';
@@ -35,37 +35,37 @@ const severityConfig: Record<
   },
 };
 
-function ToastItem({ id, message, severity }: { id: string; message: string; severity: ToastSeverity }) {
-  const { removeToast } = useToast();
-  const config = severityConfig[severity];
+interface ToastItemProps {
+  id: string;
+  message: string;
+  severity: ToastSeverity;
+  onRemove: (id: string) => void;
+}
 
-  useEffect(() => {
-    return () => {
-      // Cleanup on unmount
-    };
-  }, [id]);
+function ToastItem({ id, message, severity, onRemove }: ToastItemProps) {
+  const config = severityConfig[severity];
 
   return (
     <div
       role="alert"
       aria-live="polite"
       className={cn(
-        'flex items-start gap-3 p-4 rounded-lg border shadow-lg min-w-[320px] max-w-md',
-        'transition-all duration-300 ease-out',
-        'animate-in slide-in-from-right-full fade-in',
-        'animate-out slide-out-to-right-full fade-out',
+        'flex items-center gap-3 p-4 rounded-lg border shadow-lg',
+        'transform transition-all duration-300 ease-in-out',
+        'animate-in slide-in-from-right-5 fade-in-20',
         config.bgColor,
-        config.borderColor,
-        'border'
+        config.borderColor
       )}
     >
-      <span className={cn('flex-shrink-0 mt-0.5', config.iconColor)} aria-hidden="true">
-        {config.icon}
-      </span>
-      <p className="flex-1 text-sm font-medium text-slate-100 font-sans">{message}</p>
+      <div className={cn('flex-shrink-0', config.iconColor)}>{config.icon}</div>
+      <p className="flex-1 text-sm text-slate-200 font-medium">{message}</p>
       <button
-        onClick={() => removeToast(id)}
-        className="flex-shrink-0 text-slate-400 hover:text-slate-100 transition-colors p-1 rounded hover:bg-slate-700"
+        onClick={() => onRemove(id)}
+        className={cn(
+          'flex-shrink-0 p-1 rounded-md transition-colors',
+          'hover:bg-slate-700 text-slate-400 hover:text-slate-200',
+          'focus:outline-none focus:ring-2 focus:ring-indigo-500'
+        )}
         aria-label="Close notification"
       >
         <X className="w-4 h-4" />
@@ -75,11 +75,15 @@ function ToastItem({ id, message, severity }: { id: string; message: string; sev
 }
 
 export function Toast() {
-  const { toasts } = useToast();
+  const { toasts, removeToast } = useToast();
+
+  if (toasts.length === 0) {
+    return null;
+  }
 
   return (
     <div
-      className="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"
+      className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"
       aria-label="Toast notifications"
     >
       {toasts.map((toast) => (
@@ -88,6 +92,7 @@ export function Toast() {
             id={toast.id}
             message={toast.message}
             severity={toast.severity}
+            onRemove={removeToast}
           />
         </div>
       ))}
