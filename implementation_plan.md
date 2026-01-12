@@ -40,14 +40,15 @@ Implement the 4-Panel Grid System (Workspace, Channel, Main, Agent). Establish r
 **Phase 4: Service Layer (Mock API) [COMPLETED]**
 Develop the MockService class with async methods simulating 1-5s latency and 15% error rates. Implement the subscription model for "real-time" activity streams.
 
-**Phase 5: Component System - Navigation [IN PROGRESS]**
+**Phase 5: Component System - Navigation [COMPLETED]**
 Build the Workspace Sidebar and Channel Sidebar. Implement row-based lists, hover states, and active indicators. 
-*   **Status:** Workspace Sidebar (`workspace-list.tsx`) implemented and integrated into Main Layout. Channel Sidebar pending.
+*   **Status:** Workspace Sidebar (`workspace-list.tsx`) and Channel Sidebar (`channel-list.tsx`) implemented and integrated into Main Layout.
 
-**Phase 6: Main Content - Threads & Activity**
+**Phase 6: Main Content - Threads & Activity [COMPLETED]**
 Build the Thread list and Main Activity Area. Implement the Container/Presenter pattern for the Activity Stream with auto-scroll logic and filtering.
+*   **Status:** `ThreadList` component implemented to fetch and display threads based on active channel context. `ActivityStream` component implemented with real-time MockService subscription, auto-scrolling behavior, and distinct typography for logs/errors/metrics.
 
-**Phase 7: Agent Panel & Metrics**
+**Phase 7: Agent Panel & Metrics [IN PROGRESS]**
 Develop the right-hand panel displaying agent status, health metrics, and configuration options. Ensure collapsible functionality.
 
 **Phase 8: Interaction Layer**
