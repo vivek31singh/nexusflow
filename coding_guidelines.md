@@ -10,6 +10,7 @@
   /ui                # Primitives (Button, Input, etc.)
     /button.tsx
     /panel.tsx       # Reusable panel wrapper
+    /skeleton.tsx    # Shimmering loading placeholder
   /layout            # Layout structure
     /main-layout.tsx
     /sidebar.tsx
